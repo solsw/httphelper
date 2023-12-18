@@ -7,7 +7,7 @@ import (
 )
 
 // HttpError represents an HTTP error.
-// ErrorBody is read from an HTTP response body.
+// ErrorBody is read from an HTTP response body, if any.
 type HttpError[B any] struct {
 	StatusCode int    `json:"status_code"`
 	Status     string `json:"status"`
@@ -24,8 +24,10 @@ func (e *HttpError[B]) Error() string {
 func NewHttpError[B any](rs *http.Response) (*HttpError[B], error) {
 	bb, _ := io.ReadAll(rs.Body)
 	var b B
-	if err := json.Unmarshal(bb, &b); err != nil {
-		return nil, err
+	if len(bb) > 0 {
+		if err := json.Unmarshal(bb, &b); err != nil {
+			return nil, err
+		}
 	}
 	return &HttpError[B]{
 			StatusCode: rs.StatusCode,
