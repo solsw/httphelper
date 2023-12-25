@@ -21,11 +21,11 @@ func (e *HttpError[B]) Error() string {
 }
 
 // NewHttpError creates HttpError from [http.Response].
-func NewHttpError[O any](rs *http.Response, opts ...HttpErrorOption) (*HttpError[O], error) {
+func NewHttpError[O any](rs *http.Response, opts ...func(o *HttpErrorOptions)) (*HttpError[O], error) {
 	he := HttpError[O]{StatusCode: rs.StatusCode, Status: rs.Status}
-	var options httpErrorOptions
+	var options HttpErrorOptions
 	for _, opt := range opts {
-		opt()(&options)
+		opt(&options)
 	}
 	if options.withObject {
 		bb, _ := io.ReadAll(rs.Body)
