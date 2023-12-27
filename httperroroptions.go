@@ -5,7 +5,7 @@ type HttpErrorOptions struct {
 	withObject bool
 }
 
-// WithObject turns on [HttpError] Object reading from a HTTP response body.
+// WithObject turns on [HttpError]'s Object JSON deserializing from HTTP response body.
 func WithObject() func(o *HttpErrorOptions) {
 	return func(o *HttpErrorOptions) {
 		o.withObject = true
