@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/solsw/generichelper"
 )
@@ -20,12 +21,17 @@ import (
 // [type argument]: https://go.dev/ref/spec#Instantiations
 func RestInOut[I, O, E any](ctx context.Context, client *http.Client, method, url string, header http.Header, in *I) (*O, error) {
 	var body io.Reader
-	if !generichelper.IsNoType[I]() {
-		bbIn, err := json.Marshal(in)
-		if err != nil {
-			return nil, err
+	if in != nil && !generichelper.IsNoType[I]() {
+		if generichelper.IsString[I]() {
+			var str any = *in
+			body = strings.NewReader(str.(string))
+		} else {
+			bbIn, err := json.Marshal(in)
+			if err != nil {
+				return nil, err
+			}
+			body = bytes.NewReader(bbIn)
 		}
-		body = bytes.NewReader(bbIn)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
