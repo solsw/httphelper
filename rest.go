@@ -18,7 +18,7 @@ import (
 // Pass [generichelper.NoType] as corresponding [type argument] to skip processing of any object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
-func RestInOut[I, O, E any](ctx context.Context, client http.Client, method, url string, header http.Header, in *I) (*O, error) {
+func RestInOut[I, O, E any](ctx context.Context, client *http.Client, method, url string, header http.Header, in *I) (*O, error) {
 	var body io.Reader
 	if !generichelper.IsNoType[I]() {
 		bbIn, err := json.Marshal(in)
