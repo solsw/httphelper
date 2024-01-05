@@ -1,4 +1,4 @@
-package httphelper
+package rest
 
 import (
 	"bytes"
@@ -6,23 +6,25 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/solsw/generichelper"
+	"github.com/solsw/httphelper"
 )
 
-// RestInOut performs REST request-response sequence.
+// InOut performs REST request-response sequence.
 // Input object 'in' of type 'I' is JSON serialized to request body.
-// Output object of type 'O' is JSON deserialized from response body, if there is no error, and returned.
-// If response's HTTP status code is not [http.StatusOK], [HttpError] is returned.
-// [HttpError]'s Object of type 'E' is JSON deserialized from response body.
+// If there is no error, output object of type 'O' is JSON deserialized from response body and returned.
+// If response's HTTP status code is not [http.StatusOK], [httphelper.Error] is returned.
+// [httphelper.Error]'s Object of type 'E' is JSON deserialized from response body.
 // Pass [generichelper.NoType] as corresponding [type argument] to skip processing of any object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
-func RestInOut[I, O, E any](ctx context.Context, client *http.Client, method, url string, header http.Header, in *I) (*O, error) {
+func InOut[I, O, E any](ctx context.Context, client *http.Client, method, url string, header http.Header, in *I) (*O, error) {
 	var body io.Reader
 	if in != nil && !generichelper.IsNoType[I]() {
-		if generichelper.IsString[I]() {
+		if generichelper.TypeOf[I]().Kind() == reflect.String {
 			var str any = *in
 			body = strings.NewReader(str.(string))
 		} else {
@@ -44,7 +46,7 @@ func RestInOut[I, O, E any](ctx context.Context, client *http.Client, method, ur
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		herr, err := NewHttpError[E](resp, WithObject())
+		herr, err := httphelper.NewError[E](resp, httphelper.ErrorOptionWithObject())
 		if err != nil {
 			return nil, err
 		}

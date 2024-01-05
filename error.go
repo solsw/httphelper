@@ -8,24 +8,24 @@ import (
 	"github.com/solsw/generichelper"
 )
 
-// HttpError represents a HTTP error.
-// Object (if turned on in options) is deserialized from JSON read from HTTP response body, if any.
-type HttpError[E any] struct {
+// Error represents a HTTP error.
+// Object (if turned on in options) is deserialized from JSON read from HTTP response body (if any).
+type Error[E any] struct {
 	StatusCode int    `json:"status_code"`
 	Status     string `json:"status"`
 	Object     E      `json:"object,omitempty"`
 }
 
 // Error implements the [error] interface.
-func (e *HttpError[B]) Error() string {
+func (e *Error[B]) Error() string {
 	bb, _ := json.MarshalIndent(e, "", "  ")
 	return string(bb)
 }
 
-// NewHttpError creates HttpError from [http.Response].
-func NewHttpError[E any](rs *http.Response, opts ...func(o *HttpErrorOptions)) (*HttpError[E], error) {
-	herr := HttpError[E]{StatusCode: rs.StatusCode, Status: rs.Status}
-	var options HttpErrorOptions
+// NewError creates [Error] from [http.Response].
+func NewError[E any](rs *http.Response, opts ...func(o *ErrorOptions)) (*Error[E], error) {
+	herr := Error[E]{StatusCode: rs.StatusCode, Status: rs.Status}
+	var options ErrorOptions
 	for _, opt := range opts {
 		opt(&options)
 	}
