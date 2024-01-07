@@ -13,11 +13,12 @@ import (
 	"github.com/solsw/httphelper"
 )
 
-// InOut performs REST request-response sequence.
-// Input object 'in' of type 'I' is JSON serialized to request body.
-// If there is no error, output object of type 'O' is JSON deserialized from response body and returned.
+// InOut performs REST request-response sequence with input and output objects
+// passed JSON-encoded as request and response body respectively.
+// 'I' - type of input object. 'O' - type of output object.
+// If there is no error, output object is returned.
 // If response's HTTP status code is not [http.StatusOK], [httphelper.Error] is returned.
-// [httphelper.Error]'s Object of type 'E' is JSON deserialized from response body.
+// [httphelper.Error]'s Object of type 'E' is JSON-decoded from response body.
 // Pass [generichelper.NoType] as corresponding [type argument] to skip processing of any object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
@@ -46,6 +47,7 @@ func InOut[I, O, E any](ctx context.Context, client *http.Client, method, url st
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		// !generichelper.IsNoType[E]() - is checked in NewError
 		herr, err := httphelper.NewError[E](resp, httphelper.ErrorOptionWithObject())
 		if err != nil {
 			return nil, err
