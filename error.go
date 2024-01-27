@@ -17,6 +17,8 @@ type Error[E any] struct {
 }
 
 // Error implements the [error] interface.
+//
+// [error]: https://pkg.go.dev/builtin#error
 func (e *Error[B]) Error() string {
 	bb, _ := json.MarshalIndent(e, "", "  ")
 	return string(bb)
