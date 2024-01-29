@@ -14,15 +14,11 @@ import (
 // BodyBody performs REST request-response sequence with 'in' request body
 // and returns the contents of the response body.
 //
-// If 'isError' returns 'true', [httphelper.Error] is returned.
-// If 'isError' is nil, inequality of response's HTTP status code to [http.StatusOK] is considered an error.
-// [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
-// Pass [generichelper.NoType] as 'E' to skip processing of [httphelper.Error.Object].
+// If 'isError' is not nil and returns 'true', [httphelper.Error] is returned.
+// [httphelper.Error.Object] of type 'E' is then JSON-decoded from the response body.
+// Pass [generichelper.NoType] as 'E' to omit processing of [httphelper.Error.Object].
 func BodyBody[E any](ctx context.Context, client *http.Client, method, url string,
 	header http.Header, in io.Reader, isError func(*http.Response) bool) ([]byte, error) {
-	if isError == nil {
-		isError = func(r *http.Response) bool { return r.StatusCode != http.StatusOK }
-	}
 	req, err := http.NewRequestWithContext(ctx, method, url, in)
 	if err != nil {
 		return nil, err
@@ -33,7 +29,7 @@ func BodyBody[E any](ctx context.Context, client *http.Client, method, url strin
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if isError(resp) {
+	if isError != nil && isError(resp) {
 		// !generichelper.IsNoType[E]() - is checked in NewError
 		herr, err := httphelper.NewError[E](resp, httphelper.ErrorOptionWithObject())
 		if err != nil {
@@ -47,11 +43,10 @@ func BodyBody[E any](ctx context.Context, client *http.Client, method, url strin
 // BodyJson performs REST request-response sequence with 'in' request body
 // and output object of type 'O' passed JSON-encoded as the response body.
 //
-// If 'isError' returns 'true', [httphelper.Error] is returned.
-// If 'isError' is nil, inequality of response's HTTP status code to [http.StatusOK] is considered an error.
-// [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
+// If 'isError' is not nil and returns 'true', [httphelper.Error] is returned.
+// [httphelper.Error.Object] of type 'E' is then JSON-decoded from the response body.
 //
-// Pass [generichelper.NoType] as corresponding [type argument] to skip processing of any object.
+// Pass [generichelper.NoType] as corresponding [type argument] to omit processing of either object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
 func BodyJson[O, E any](ctx context.Context, client *http.Client, method, url string,
@@ -74,11 +69,10 @@ func BodyJson[O, E any](ctx context.Context, client *http.Client, method, url st
 // passed JSON-encoded as the request and the response body respectively.
 // 'I' - type of the input object. 'O' - type of the output object.
 //
-// If 'isError' returns 'true', [httphelper.Error] is returned.
-// If 'isError' is nil, inequality of response's HTTP status code to [http.StatusOK] is considered an error.
-// [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
+// If 'isError' is not nil and returns 'true', [httphelper.Error] is returned.
+// [httphelper.Error.Object] of type 'E' is then JSON-decoded from the response body.
 //
-// Pass [generichelper.NoType] as corresponding [type argument] to skip processing of any object.
+// Pass [generichelper.NoType] as corresponding [type argument] to omit processing of either object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
 func JsonJson[I, O, E any](ctx context.Context, client *http.Client, method, url string,
