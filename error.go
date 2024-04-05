@@ -10,28 +10,28 @@ import (
 
 // Error represents a HTTP error.
 // Object (if turned on in options) is deserialized from JSON read from HTTP response body (if any).
-type Error[E any] struct {
+type Error[T any] struct {
 	StatusCode int    `json:"status_code"`
 	Status     string `json:"status"`
-	Object     E      `json:"object,omitempty"`
+	Object     T      `json:"object,omitempty"`
 }
 
 // Error implements the [error] interface.
 //
 // [error]: https://pkg.go.dev/builtin#error
-func (e *Error[B]) Error() string {
-	bb, _ := json.MarshalIndent(e, "", "  ")
+func (e *Error[T]) Error() string {
+	bb, _ := json.Marshal(e)
 	return string(bb)
 }
 
 // NewError creates [Error] from [http.Response].
-func NewError[E any](rs *http.Response, opts ...func(o *ErrorOptions)) (*Error[E], error) {
-	herr := Error[E]{StatusCode: rs.StatusCode, Status: rs.Status}
+func NewError[T any](rs *http.Response, opts ...func(o *ErrorOptions)) (*Error[T], error) {
+	herr := Error[T]{StatusCode: rs.StatusCode, Status: rs.Status}
 	var options ErrorOptions
 	for _, opt := range opts {
 		opt(&options)
 	}
-	if options.withObject && !generichelper.IsNoType[E]() {
+	if options.withObject && !generichelper.IsNoType[T]() {
 		bb, err := io.ReadAll(rs.Body)
 		if err != nil {
 			return nil, err
