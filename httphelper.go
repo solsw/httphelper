@@ -6,11 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"net/http"
 )
 
-// JsonBody sets [http.Request]'s body to JSON-encoded 'in', if not nil.
-func JsonBody(rq *http.Request, in any) (*http.Request, error) {
+// JsonBody creates [http.Request.Body] with JSON-encoded 'in', if not nil.
+func JsonBody(in any) (io.ReadCloser, error) {
 	if in == nil {
 		return nil, errors.New("nil input")
 	}
@@ -18,8 +17,7 @@ func JsonBody(rq *http.Request, in any) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	rq.Body = io.NopCloser(bytes.NewReader(jin))
-	return rq, nil
+	return io.NopCloser(bytes.NewReader(jin)), nil
 }
 
 // AuthBasic returns Basic authorization value.
