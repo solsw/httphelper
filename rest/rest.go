@@ -31,7 +31,7 @@ func BodyBody[E any](ctx context.Context, client *http.Client, method, url strin
 	defer rs.Body.Close()
 	if isError != nil && isError(rs) {
 		// !generichelper.IsNoType[E]() - is checked in NewError
-		herr, err := httphelper.NewError[E](rs, httphelper.ErrorOptionWithObject())
+		herr, err := httphelper.NewError[E](rs, httphelper.ErrorOptionWithObject(), httphelper.ErrorOptionWithMessage())
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func ReqBody[E any](client *http.Client, rq *http.Request, isError func(*http.Re
 	defer rs.Body.Close()
 	if isError != nil && isError(rs) {
 		// !generichelper.IsNoType[E]() - is checked in NewError
-		herr, err := httphelper.NewError[E](rs, httphelper.ErrorOptionWithObject())
+		herr, err := httphelper.NewError[E](rs, httphelper.ErrorOptionWithObject(), httphelper.ErrorOptionWithMessage())
 		if err != nil {
 			return nil, err
 		}

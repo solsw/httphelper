@@ -42,20 +42,6 @@ func NewError[T any](rs *http.Response, opts ...func(o *ErrorOptions)) (*Error[T
 		if len(bb) == 0 {
 			return nil, ErrEmptyResponseBody
 		}
-		// var erro, errm error
-		// if options.withObject && !generichelper.IsNoType[T]() {
-		// 	erro = json.Unmarshal(bb, &herr.Object)
-		// }
-		// if options.withMessage && (erro != nil || generichelper.IsZeroValue(herr.Object)) {
-		// 	if !utf8.Valid(bb) {
-		// 		errm = errors.New("invalid UTF-8-encoded runes")
-		// 	} else {
-		// 		herr.Message = string(bb)
-		// 	}
-		// }
-		// if errj := errors.Join(erro, errm); errj != nil {
-		// 	return nil, errj
-		// }
 		_, err = objMsg(&herr, bb, options)
 		if err != nil {
 			return nil, err
