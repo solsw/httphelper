@@ -2,8 +2,10 @@ package httphelper
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/solsw/generichelper"
 )
@@ -14,6 +16,7 @@ type Error[T any] struct {
 	StatusCode int    `json:"status_code"`
 	Status     string `json:"status"`
 	Object     T      `json:"object,omitempty"`
+	Message    string `json:"message,omitempty"`
 }
 
 // Error implements the [error] interface.
@@ -31,16 +34,48 @@ func NewError[T any](rs *http.Response, opts ...func(o *ErrorOptions)) (*Error[T
 	for _, opt := range opts {
 		opt(&options)
 	}
-	if options.withObject && !generichelper.IsNoType[T]() {
+	if options.withObject || options.withMessage {
 		bb, err := io.ReadAll(rs.Body)
 		if err != nil {
 			return nil, err
 		}
-		if len(bb) > 0 {
-			if err := json.Unmarshal(bb, &herr.Object); err != nil {
-				return nil, err
-			}
+		if len(bb) == 0 {
+			return nil, ErrEmptyResponseBody
+		}
+		// var erro, errm error
+		// if options.withObject && !generichelper.IsNoType[T]() {
+		// 	erro = json.Unmarshal(bb, &herr.Object)
+		// }
+		// if options.withMessage && (erro != nil || generichelper.IsZeroValue(herr.Object)) {
+		// 	if !utf8.Valid(bb) {
+		// 		errm = errors.New("invalid UTF-8-encoded runes")
+		// 	} else {
+		// 		herr.Message = string(bb)
+		// 	}
+		// }
+		// if errj := errors.Join(erro, errm); errj != nil {
+		// 	return nil, errj
+		// }
+		_, err = objMsg(&herr, bb, options)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return &herr, nil
+}
+
+func objMsg[T any](herr *Error[T], bb []byte, options ErrorOptions) (*Error[T], error) {
+	var erro, errm error
+	if options.withObject && !generichelper.IsNoType[T]() {
+		erro = json.Unmarshal(bb, &herr.Object)
+	}
+	if options.withMessage && (erro != nil || generichelper.IsZeroValue(herr.Object)) {
+		if !utf8.Valid(bb) {
+			errm = errors.New("invalid UTF-8-encoded runes")
+		} else {
+			herr.Message = string(bb)
+			return herr, nil
+		}
+	}
+	return herr, errors.Join(erro, errm)
 }
