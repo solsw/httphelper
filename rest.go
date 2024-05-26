@@ -1,4 +1,4 @@
-package rest
+package httphelper
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/solsw/generichelper"
-	"github.com/solsw/httphelper"
 )
 
 // ReqBody sends an [http.Request] by [http.Client] and returns the contents of the response body.
@@ -25,7 +24,7 @@ func ReqBody[E any](client *http.Client, rq *http.Request, isError func(*http.Re
 	defer rs.Body.Close()
 	if isError != nil && isError(rs) {
 		// !generichelper.IsNoType[E]() - is checked in NewError
-		herr, err := httphelper.NewError[E](rs, httphelper.ErrorOptionWithObject(), httphelper.ErrorOptionWithMessage())
+		herr, err := NewError[E](rs, ErrorOptionWithObject(), ErrorOptionWithMessage())
 		if err != nil {
 			return nil, err
 		}
