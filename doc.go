@@ -1,2 +1,2 @@
-// Package httphelper contains [net/http] package helpers.
+// Package httphelper contains [http] package helpers.
 package httphelper
