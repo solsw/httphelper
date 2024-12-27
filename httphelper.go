@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"io"
-	"net/http"
 )
 
 // JsonReader creates [bytes.Reader] containing JSON-encoded 'in'
@@ -20,19 +18,6 @@ func JsonReader(in any) (*bytes.Reader, error) {
 		return nil, err
 	}
 	return bytes.NewReader(jin), nil
-}
-
-// JsonBody creates [http] Body containing JSON-encoded 'in'.
-// If 'in' is nil, [http.NoBody] is returned.
-func JsonBody(in any) (io.ReadCloser, error) {
-	if in == nil {
-		return http.NoBody, nil
-	}
-	body, err := JsonReader(in)
-	if err != nil {
-		return nil, err
-	}
-	return io.NopCloser(body), nil
 }
 
 // AuthBasic returns Basic authorization value.
