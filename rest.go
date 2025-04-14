@@ -8,21 +8,22 @@ import (
 	"github.com/solsw/generichelper"
 )
 
-// ReqBody sends an [http.Request] by [http.Client] and returns the contents of the response body.
+// ReqBody sends the provided [http.Request] by the provided [http.Client]
+// and returns the contents of the response body.
 //
-// If 'isError' is not nil and returns 'true', [httphelper.Error] is returned.
+// If 'isErr' is not nil and returns 'true', [httphelper.Error] is returned.
 // [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
 // If response body does not contain JSON-encoded 'E', but contains a string,
 // this string is returned in [httphelper.Error.Message] field.
 //
 // Pass [generichelper.NoType] as 'E' to omit processing of [httphelper.Error.Object].
-func ReqBody[E any](client *http.Client, rq *http.Request, isError func(*http.Response) bool) ([]byte, error) {
-	rs, err := client.Do(rq)
+func ReqBody[E any](cl *http.Client, rq *http.Request, isErr func(*http.Response) bool) ([]byte, error) {
+	rs, err := cl.Do(rq)
 	if err != nil {
 		return nil, err
 	}
 	defer rs.Body.Close()
-	if isError != nil && isError(rs) {
+	if isErr != nil && isErr(rs) {
 		// !generichelper.IsNoType[E]() - is checked in NewError
 		herr, err := NewError[E](rs, ErrorOptionWithObject(), ErrorOptionWithMessage())
 		if err != nil {
@@ -33,10 +34,10 @@ func ReqBody[E any](client *http.Client, rq *http.Request, isError func(*http.Re
 	return io.ReadAll(rs.Body)
 }
 
-// ReqJson sends an [http.Request] by [http.Client] and returns
-// output object of type 'O' passed JSON-encoded as the response body.
+// ReqD9e sends the provided [http.Request] by the provided [http.Client] and returns
+// output object of type 'O' deserialized by 'd9e' from the response body.
 //
-// If 'isError' is not nil and returns 'true', [httphelper.Error] is returned.
+// If 'isErr' is not nil and returns 'true', [httphelper.Error] is returned.
 // [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
 // If response body does not contain JSON-encoded 'E', but contains a string,
 // this string is returned in [httphelper.Error.Message] field.
@@ -44,17 +45,33 @@ func ReqBody[E any](client *http.Client, rq *http.Request, isError func(*http.Re
 // Pass [generichelper.NoType] as corresponding [type argument] to omit processing of either object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
-func ReqJson[O, E any](client *http.Client, rq *http.Request, isError func(*http.Response) bool) (*O, error) {
-	bbout, err := ReqBody[E](client, rq, isError)
+func ReqD9e[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Response) bool,
+	d9e func(data []byte, v any) error) (*O, error) {
+	body, err := ReqBody[E](cl, rq, isErr)
 	if err != nil {
 		return nil, err
 	}
 	if generichelper.IsNoType[O]() {
 		return nil, nil
 	}
-	var out O
-	if err := json.Unmarshal(bbout, &out); err != nil {
+	var o O
+	if err := d9e(body, &o); err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return &o, nil
+}
+
+// ReqJson sends the provided [http.Request] by the provided [http.Client] and returns
+// output object of type 'O' deserialized by [json.Unmarshal] from the response body.
+//
+// If 'isErr' is not nil and returns 'true', [httphelper.Error] is returned.
+// [httphelper.Error.Object] of type 'E' is JSON-decoded from the response body.
+// If response body does not contain JSON-encoded 'E', but contains a string,
+// this string is returned in [httphelper.Error.Message] field.
+//
+// Pass [generichelper.NoType] as corresponding [type argument] to omit processing of either object.
+//
+// [type argument]: https://go.dev/ref/spec#Instantiations
+func ReqJson[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Response) bool) (*O, error) {
+	return ReqD9e[O, E](cl, rq, isErr, json.Unmarshal)
 }
