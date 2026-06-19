@@ -1,11 +1,30 @@
 package httphelper
 
 import (
+	"io"
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/solsw/generichelper"
 )
+
+func Test_NewError_EmptyBody(t *testing.T) {
+	rs := &http.Response{
+		StatusCode: http.StatusNotFound,
+		Status:     "404 Not Found",
+		Body:       io.NopCloser(strings.NewReader("")),
+	}
+	got, err := NewError[generichelper.NoType](rs, ErrorOptionWithObject(), ErrorOptionWithMessage())
+	if err != nil {
+		t.Fatalf("NewError() error = %v, want nil", err)
+	}
+	want := &Error[generichelper.NoType]{StatusCode: http.StatusNotFound, Status: "404 Not Found"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("NewError() = %v, want %v", got, want)
+	}
+}
 
 func Test_objMsg_NoType(t *testing.T) {
 	type args struct {
@@ -46,13 +65,13 @@ func Test_objMsg_NoType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := objMsg(tt.args.herr, tt.args.bb, tt.args.options)
+			err := objMsg(tt.args.herr, tt.args.bb, tt.args.options)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("objMsg() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("objMsg() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(tt.args.herr, tt.want) {
+				t.Errorf("objMsg() = %v, want %v", tt.args.herr, tt.want)
 			}
 		})
 	}
@@ -75,30 +94,30 @@ func Test_objMsg_E(t *testing.T) {
 		want    *Error[E]
 		wantErr bool
 	}{
-		// {name: "object",
-		// 	args: args{
-		// 		herr:    &Error[E]{},
-		// 		bb:      []byte(`{"I":1,"S":"one"}`),
-		// 		options: ErrorOptions{withObject: true, withMessage: true},
-		// 	},
-		// 	want: &Error[E]{Object: E{I: 1, S: "one"}},
-		// },
-		// {name: "not JSON",
-		// 	args: args{
-		// 		herr:    &Error[E]{},
-		// 		bb:      []byte("qwerty"),
-		// 		options: ErrorOptions{withObject: true, withMessage: true},
-		// 	},
-		// 	want: &Error[E]{Message: "qwerty"},
-		// },
-		// {name: "cannot unmarshal string",
-		// 	args: args{
-		// 		herr:    &Error[E]{},
-		// 		bb:      []byte(`"qwerty"`),
-		// 		options: ErrorOptions{withObject: true, withMessage: true},
-		// 	},
-		// 	want: &Error[E]{Message: `"qwerty"`},
-		// },
+		{name: "object",
+			args: args{
+				herr:    &Error[E]{},
+				bb:      []byte(`{"I":1,"S":"one"}`),
+				options: ErrorOptions{withObject: true, withMessage: true},
+			},
+			want: &Error[E]{Object: E{I: 1, S: "one"}},
+		},
+		{name: "not JSON",
+			args: args{
+				herr:    &Error[E]{},
+				bb:      []byte("qwerty"),
+				options: ErrorOptions{withObject: true, withMessage: true},
+			},
+			want: &Error[E]{Message: "qwerty"},
+		},
+		{name: "cannot unmarshal string",
+			args: args{
+				herr:    &Error[E]{},
+				bb:      []byte(`"qwerty"`),
+				options: ErrorOptions{withObject: true, withMessage: true},
+			},
+			want: &Error[E]{Message: `"qwerty"`},
+		},
 		{name: "cannot unmarshal",
 			args: args{
 				herr:    &Error[E]{},
@@ -110,13 +129,13 @@ func Test_objMsg_E(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := objMsg(tt.args.herr, tt.args.bb, tt.args.options)
+			err := objMsg(tt.args.herr, tt.args.bb, tt.args.options)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("objMsg() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("objMsg() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(tt.args.herr, tt.want) {
+				t.Errorf("objMsg() = %v, want %v", tt.args.herr, tt.want)
 			}
 		})
 	}

@@ -2,7 +2,6 @@ package httphelper
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/solsw/generichelper"
@@ -31,7 +30,7 @@ func ReqBody[E any](cl *http.Client, rq *http.Request, isErr func(*http.Response
 		}
 		return nil, herr
 	}
-	return io.ReadAll(rs.Body)
+	return readBody(rs.Body)
 }
 
 // ReqD9e sends the provided [http.Request] by the provided [http.Client] and returns
@@ -61,7 +60,7 @@ func ReqD9e[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Respon
 	return &o, nil
 }
 
-// ReqJson sends the provided [http.Request] by the provided [http.Client] and returns
+// ReqJSON sends the provided [http.Request] by the provided [http.Client] and returns
 // output object of type 'O' deserialized by [json.Unmarshal] from the response body.
 //
 // If 'isErr' is not nil and returns 'true', [httphelper.Error] is returned.
@@ -72,6 +71,6 @@ func ReqD9e[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Respon
 // Pass [generichelper.NoType] as corresponding [type argument] to omit processing of either object.
 //
 // [type argument]: https://go.dev/ref/spec#Instantiations
-func ReqJson[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Response) bool) (*O, error) {
+func ReqJSON[O, E any](cl *http.Client, rq *http.Request, isErr func(*http.Response) bool) (*O, error) {
 	return ReqD9e[O, E](cl, rq, isErr, json.Unmarshal)
 }

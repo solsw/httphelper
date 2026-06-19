@@ -1,5 +1,5 @@
 module github.com/solsw/httphelper
 
-go 1.18
+go 1.26
 
-require github.com/solsw/generichelper v0.18.0
+require github.com/solsw/generichelper v0.20.0

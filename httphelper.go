@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 )
 
-// JsonReader creates [bytes.Reader] containing JSON-encoded 'in'
+// JSONReader creates [bytes.Reader] containing JSON-encoded 'in'
 // to use as body with [http.NewRequest] or [http.NewRequestWithContext].
 // If 'in' is nil, nil is returned.
-func JsonReader(in any) (*bytes.Reader, error) {
+func JSONReader(in any) (*bytes.Reader, error) {
 	if in == nil {
 		return nil, nil
 	}
